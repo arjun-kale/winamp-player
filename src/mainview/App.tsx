@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
+import { WinampContextMenu } from "./WinampContextMenu";
 import {
   Music,
   Play,
@@ -126,6 +128,8 @@ export default function App({ electrobun }: AppProps) {
   const [volume, setVolume] = useState(0.7);
   const [eqValues, setEqValues] = useState<number[]>(BASE_EQ_CURVE);
 
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+
   const currentSongs = TABS[activeTab];
   const activeSong =
     Object.values(TABS)
@@ -200,7 +204,26 @@ export default function App({ electrobun }: AppProps) {
     }
   };
 
-  // Handle context menu actions from native menu
+  // Show custom context menu on right-click
+  useEffect(() => {
+    const handler = (e: CustomEvent<{ x: number; y: number }>) => {
+      setContextMenu({ x: e.detail.x, y: e.detail.y });
+    };
+    const wrapped = (e: Event) => handler(e as CustomEvent<{ x: number; y: number }>);
+    document.addEventListener("winamp-show-context-menu", wrapped);
+    return () => document.removeEventListener("winamp-show-context-menu", wrapped);
+  }, []);
+
+  const handleContextMenuAction = useCallback(
+    (action: string) => {
+      document.dispatchEvent(
+        new CustomEvent("winamp-context-action", { detail: action }),
+      );
+    },
+    [],
+  );
+
+  // Handle context menu actions
   useEffect(() => {
     const handler = (e: CustomEvent<string>) => {
       switch (e.detail) {
@@ -453,6 +476,18 @@ export default function App({ electrobun }: AppProps) {
           })}
         </div>
       </div>
+
+      {contextMenu &&
+        createPortal(
+          <WinampContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            isPlaying={isPlaying}
+            onAction={handleContextMenuAction}
+            onClose={() => setContextMenu(null)}
+          />,
+          document.body,
+        )}
     </div>
   );
 }

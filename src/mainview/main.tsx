@@ -19,10 +19,14 @@ const rpc = Electroview.defineRPC<WinampRPCSchema>({
 });
 const electrobun = new Electroview({ rpc });
 
-// Replace default context menu with useful player controls
+// Prevent default context menu; App shows custom Winamp-styled menu
 document.addEventListener("contextmenu", (e) => {
 	e.preventDefault();
-	electrobun.rpc?.send?.showContextMenu?.();
+	document.dispatchEvent(
+		new CustomEvent("winamp-show-context-menu", {
+			detail: { x: e.clientX, y: e.clientY },
+		}),
+	);
 });
 
 createRoot(document.getElementById("root")!).render(
