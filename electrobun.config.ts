@@ -11,7 +11,6 @@ export default {
 			"dist/index.html": "views/mainview/index.html",
 			"dist/assets": "views/mainview/assets",
 		},
-		watchIgnore: ["dist/**"],
 		mac: {
 			bundleCEF: false,
 		},
