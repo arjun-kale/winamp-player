@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Music,
   Play,
@@ -10,7 +10,24 @@ import {
   VolumeX,
   ArrowDownToLine,
   FoldVertical,
+  Minus,
+  Square,
+  X,
 } from "lucide-react";
+type WinampElectrobun = {
+  rpc?: {
+    send: {
+      resizeWindow: (p: { width: number; height: number }) => void;
+      closeWindow: () => void;
+      minimizeWindow: () => void;
+      maximizeWindow: () => void;
+    };
+  };
+};
+
+type AppProps = {
+  electrobun: WinampElectrobun;
+};
 
 const LOFI_SONGS = [
   { id: 1, title: "Morning Coffee", artist: "Lofi Girl", duration: 145 },
@@ -52,7 +69,56 @@ const BASE_EQ_CURVE = [
   2, 2, 2,
 ];
 
-export default function App() {
+const MIN_WIDTH = 380;
+const MIN_HEIGHT = 400;
+
+function useResizeToContent(
+  electrobun: WinampElectrobun,
+  enabled: boolean,
+  contentKey: number,
+) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const reportSize = useCallback(
+    (w: number, h: number) => {
+      electrobun.rpc?.send?.resizeWindow?.({
+        width: Math.max(MIN_WIDTH, Math.round(w)),
+        height: Math.max(MIN_HEIGHT, Math.round(h)),
+      });
+    },
+    [electrobun],
+  );
+
+  const measure = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const w = el.scrollWidth || el.clientWidth;
+    const h = el.scrollHeight || el.clientHeight;
+    if (w > 0 && h > 0) reportSize(w, h);
+  }, [reportSize]);
+
+  useEffect(() => {
+    if (!enabled || !containerRef.current) return;
+    const el = containerRef.current;
+    const schedule = () => {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(measure, 50);
+    };
+    const ro = new ResizeObserver(schedule);
+    ro.observe(el);
+    measure();
+    requestAnimationFrame(() => setTimeout(measure, 0));
+    return () => {
+      ro.disconnect();
+      clearTimeout(debounceRef.current);
+    };
+  }, [enabled, measure, contentKey]);
+
+  return containerRef;
+}
+
+export default function App({ electrobun }: AppProps) {
+  const send = electrobun.rpc?.send;
   const [activeTab, setActiveTab] = useState<keyof typeof TABS>("LOFI");
   const [activeSongId, setActiveSongId] = useState(9);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -134,15 +200,49 @@ export default function App() {
     }
   };
 
+  const contentKey = currentSongs.length * 10 + activeTab.length;
+  const containerRef = useResizeToContent(electrobun, true, contentKey);
+
   return (
-    <div className="w-[380px] bg-winamp-panel rounded-md border border-winamp-border shadow-2xl overflow-hidden flex flex-col font-mono text-winamp-text select-none">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-winamp-border">
-        <div className="flex items-center gap-2">
+    <div
+      ref={containerRef}
+      className="min-w-[380px] w-[380px] bg-winamp-panel rounded-md border border-winamp-border shadow-2xl overflow-hidden flex flex-col font-mono text-winamp-text select-none"
+    >
+      {/* Custom Title Bar - draggable, with window controls */}
+      <div
+        className={`flex items-center justify-between px-2 py-2 border-b border-winamp-border electrobun-webkit-app-region-drag`}
+      >
+        <div className="electrobun-webkit-app-region-no-drag flex items-center gap-1">
+          <button
+            onClick={() => send?.closeWindow()}
+            className="p-1 rounded text-winamp-muted hover:text-winamp-text-bright hover:bg-winamp-border/50 transition-colors"
+            aria-label="Close"
+          >
+            <X size={12} />
+          </button>
+          <button
+            onClick={() => send?.minimizeWindow()}
+            className="p-1 rounded text-winamp-muted hover:text-winamp-text-bright hover:bg-winamp-border/50 transition-colors"
+            aria-label="Minimize"
+          >
+            <Minus size={12} />
+          </button>
+          <button
+            onClick={() => send?.maximizeWindow()}
+            className="p-1 rounded text-winamp-muted hover:text-winamp-text-bright hover:bg-winamp-border/50 transition-colors"
+            aria-label="Maximize"
+          >
+            <Square size={12} />
+          </button>
+        </div>
+        <div className="flex items-center gap-2 flex-1 justify-center">
           <Music size={14} className="text-winamp-text" />
           <span className="text-xs tracking-widest font-bold">WINAMP</span>
         </div>
-        <button className="text-winamp-muted hover:text-winamp-text transition-colors">
+        <button
+          className="electrobun-webkit-app-region-no-drag text-winamp-muted hover:text-winamp-text transition-colors p-1"
+          aria-label="Shade"
+        >
           <ArrowDownToLine size={14} />
         </button>
       </div>

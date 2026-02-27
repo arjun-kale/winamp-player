@@ -12,15 +12,22 @@
   --color-winamp-text-bright: #c5d9c9;
 }
 
+html,
 body {
-  background-color: #0a0f0c;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
   margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #0a0f0c;
   font-family: "JetBrains Mono", monospace;
   color: #a9c2ae;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 0;
+  height: fit-content;
 }
 
 /* Custom Scrollbar */
