@@ -6,12 +6,27 @@ import "./index.css";
 import App from "./App";
 
 const rpc = Electroview.defineRPC<WinampRPCSchema>({
-	handlers: { requests: {}, messages: {} },
+	handlers: {
+		requests: {},
+		messages: {
+			contextMenuAction: (payload) => {
+				document.dispatchEvent(
+					new CustomEvent("winamp-context-action", { detail: payload.action }),
+				);
+			},
+		},
+	},
 });
 const electrobun = new Electroview({ rpc });
 
+// Replace default context menu with useful player controls
+document.addEventListener("contextmenu", (e) => {
+	e.preventDefault();
+	electrobun.rpc?.send?.showContextMenu?.();
+});
+
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <App electrobun={electrobun} />
-  </StrictMode>,
+	<StrictMode>
+		<App electrobun={electrobun} />
+	</StrictMode>,
 );

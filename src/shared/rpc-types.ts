@@ -6,10 +6,13 @@ export type WinampRPCSchema = {
 			closeWindow: void;
 			minimizeWindow: void;
 			maximizeWindow: void;
+			showContextMenu: void;
 		};
 	};
 	webview: {
 		requests: Record<string, never>;
-		messages: Record<string, never>;
+		messages: {
+			contextMenuAction: { action: string };
+		};
 	};
 };

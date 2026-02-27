@@ -168,7 +168,7 @@ export default function App({ electrobun }: AppProps) {
     return () => clearInterval(interval);
   }, [isPlaying]);
 
-  const handlePlayPause = () => setIsPlaying(!isPlaying);
+  const handlePlayPause = () => setIsPlaying((prev) => !prev);
 
   const handleNext = () => {
     const currentIndex = currentSongs.findIndex((s) => s.id === activeSongId);
@@ -199,6 +199,29 @@ export default function App({ electrobun }: AppProps) {
       setIsPlaying(true);
     }
   };
+
+  // Handle context menu actions from native menu
+  useEffect(() => {
+    const handler = (e: CustomEvent<string>) => {
+      switch (e.detail) {
+        case "playPause":
+          handlePlayPause();
+          break;
+        case "prev":
+          handlePrev();
+          break;
+        case "next":
+          handleNext();
+          break;
+        case "close":
+          send?.closeWindow();
+          break;
+      }
+    };
+    const wrapped = (e: Event) => handler(e as CustomEvent<string>);
+    document.addEventListener("winamp-context-action", wrapped);
+    return () => document.removeEventListener("winamp-context-action", wrapped);
+  }, [isPlaying]);
 
   const contentKey = currentSongs.length * 10 + activeTab.length;
   const containerRef = useResizeToContent(electrobun, true, contentKey);
