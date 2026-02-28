@@ -308,7 +308,7 @@ export function MiniPlayer({
         </div>
       </div>
 
-      <div className="flex flex-col flex-1 h-[300px]">
+      <div className="flex flex-col shrink-0">
         <div className="flex items-center justify-between px-4 py-3 border-b border-winamp-border">
           <div className="flex items-center gap-2">
             <ListMusic size={14} className="text-winamp-accent-muted" />
@@ -323,7 +323,7 @@ export function MiniPlayer({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+        <div className="h-[440px] overflow-y-auto p-2 space-y-1">
           {playQueue.map((track, index) => {
             const isActive = track.id === currentTrack?.id;
             return (

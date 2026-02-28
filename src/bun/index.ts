@@ -13,6 +13,9 @@ import { PLAYLISTS_DIR } from "./paths";
 let mainWindow: InstanceType<typeof BrowserWindow>;
 let winampRpc: ReturnType<typeof BrowserView.defineRPC<WinampRPCSchema>>;
 
+const MAIN_MIN_WIDTH = 800;
+const MAIN_MIN_HEIGHT = 600;
+
 async function init(): Promise<void> {
   await startAudioServer();
   const settings = loadSettings();
@@ -138,7 +141,9 @@ const rpc = BrowserView.defineRPC<WinampRPCSchema>({
     },
     messages: {
       resizeWindow: ({ width, height }) => {
-        mainWindow.setSize(width, height);
+        const w = Math.max(width, MAIN_MIN_WIDTH);
+        const h = Math.max(height, MAIN_MIN_HEIGHT);
+        mainWindow.setSize(w, h);
       },
       closeWindow: () => mainWindow.close(),
       minimizeWindow: () => mainWindow.minimize(),
@@ -183,6 +188,16 @@ mainWindow = new BrowserWindow({
   },
   titleBarStyle: "hidden",
   rpc,
+});
+
+mainWindow.on("resize", (event: { data: { width: number; height: number } }) => {
+  const { width, height } = event.data;
+  if (width < MAIN_MIN_WIDTH || height < MAIN_MIN_HEIGHT) {
+    mainWindow.setSize(
+      Math.max(width, MAIN_MIN_WIDTH),
+      Math.max(height, MAIN_MIN_HEIGHT)
+    );
+  }
 });
 
 console.log("Winamp Player started!");

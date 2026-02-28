@@ -6,6 +6,7 @@ import "./index.css";
 import App from "./App";
 
 const rpc = Electroview.defineRPC<WinampRPCSchema>({
+	maxRequestTime: 60_000,
 	handlers: {
 		requests: {},
 		messages: {
