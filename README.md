@@ -2,6 +2,10 @@
 
 A Winamp-inspired music player app built with [Electrobun](https://github.com/blackboardsh/electrobun), React, and Tailwind CSS.
 
+<img width="1200" height="800" alt="image" src="https://github.com/user-attachments/assets/f7a4a154-22f3-42f5-a5d2-4cb6a757b13c" />
+<img width="380" height="400" alt="image" src="https://github.com/user-attachments/assets/bb101a64-4364-44b5-86d6-36de6e93f636" />
+
+
 ## Features
 
 - 🎵 **Cross-platform desktop UI** with a nostalgic Winamp look
