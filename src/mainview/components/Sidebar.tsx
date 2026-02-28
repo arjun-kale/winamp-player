@@ -1,4 +1,4 @@
-import { Disc, Mic2, ListMusic, Radio, Clock, Heart, User } from "lucide-react";
+import { Disc, Mic2, ListMusic, Radio, Clock, Heart, Settings } from "lucide-react";
 import type { NavState, NavView } from "../types";
 import type { Mix } from "../types";
 
@@ -62,7 +62,7 @@ export function Sidebar({ navState, mixes, onNavigate }: SidebarProps) {
       </div>
 
       <div className="p-4 border-t border-winamp-border flex items-center gap-3 text-sm text-winamp-accent-muted hover:text-winamp-accent cursor-pointer transition-colors">
-        <User size={16} /> USER_0x9A
+        <Settings size={16} /> SETTINGS
       </div>
     </div>
   );

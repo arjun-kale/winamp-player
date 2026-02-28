@@ -1,15 +1,15 @@
-import type { GenreTab } from "../data/mock";
-import { GENRE_TABS } from "../data/mock";
-
 type TabNavProps = {
-  activeTab: GenreTab;
-  onTabChange: (tab: GenreTab) => void;
+  tabs: string[];
+  activeTab: string;
+  onTabChange: (tab: string) => void;
 };
 
-export function TabNav({ activeTab, onTabChange }: TabNavProps) {
+export function TabNav({ tabs, activeTab, onTabChange }: TabNavProps) {
+  if (tabs.length <= 1) return null;
+
   return (
     <div className="flex items-center gap-6 px-8 py-4 border-b border-winamp-border text-sm tracking-widest shrink-0 bg-winamp-bg">
-      {GENRE_TABS.map((tab) => (
+      {tabs.map((tab) => (
         <button
           key={tab}
           onClick={() => onTabChange(tab)}

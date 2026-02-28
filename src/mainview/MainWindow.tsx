@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import type { Track, NavState, NavView } from "./types";
-import { parseTime } from "./utils";
 import {
   MOCK_TRACKS,
   MOCK_MIXES,
@@ -8,7 +7,6 @@ import {
   MOCK_RADIOS,
   ASCII_ART,
 } from "./data/mock";
-import type { GenreTab } from "./data/mock";
 import { TitleBar } from "./components/TitleBar";
 import { Sidebar } from "./components/Sidebar";
 import { PlayerBar } from "./components/PlayerBar";
@@ -31,68 +29,36 @@ type WinampElectrobun = {
 type MainWindowProps = {
   electrobun?: WinampElectrobun;
   onToggleMini?: () => void;
+  currentTrack: Track;
+  isPlaying: boolean;
+  playQueue: Track[];
+  currentTimeMs: number;
+  volume: number;
+  onPlayTrack: (track: Track, queue: Track[] | null) => void;
+  onPlayPause: () => void;
+  onNext: () => void;
+  onPrev: () => void;
+  onScrubberChange: (seconds: number) => void;
+  onVolumeChange: (value: number) => void;
 };
 
-const defaultMix = MOCK_MIXES.find((m) => m.id === "mix3") ?? MOCK_MIXES[0];
-const defaultTrack = MOCK_TRACKS.find((t) => t.id === 4) ?? MOCK_TRACKS[0];
-
-export function MainWindow({ electrobun, onToggleMini }: MainWindowProps) {
+export function MainWindow({
+  electrobun,
+  onToggleMini,
+  currentTrack,
+  isPlaying,
+  playQueue,
+  currentTimeMs,
+  volume,
+  onPlayTrack,
+  onPlayPause,
+  onNext,
+  onPrev,
+  onScrubberChange,
+  onVolumeChange,
+}: MainWindowProps) {
   const [navState, setNavState] = useState<NavState>({ view: "mix", id: "mix3" });
-  const [activeTab, setActiveTab] = useState<GenreTab>("ALL");
-  const [currentTrack, setCurrentTrack] = useState<Track>(defaultTrack);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [playQueue, setPlayQueue] = useState<Track[]>(
-    defaultMix.tracks.map((id) => MOCK_TRACKS.find((t) => t.id === id)!).filter(Boolean)
-  );
-  const [currentTimeMs, setCurrentTimeMs] = useState(29);
-  const [volume, setVolume] = useState(0.75);
-
-  const playTrack = useCallback((track: Track, newQueue: Track[] | null = null) => {
-    setCurrentTrack(track);
-    if (newQueue) setPlayQueue(newQueue);
-    setIsPlaying(true);
-    setCurrentTimeMs(0);
-  }, []);
-
-  const handleNext = useCallback(() => {
-    if (!playQueue.length) return;
-    const idx = playQueue.findIndex((t) => t.id === currentTrack?.id);
-    if (idx !== -1 && idx < playQueue.length - 1) {
-      playTrack(playQueue[idx + 1]);
-    } else {
-      playTrack(playQueue[0]);
-    }
-  }, [playQueue, currentTrack, playTrack]);
-
-  const handlePrev = useCallback(() => {
-    if (!playQueue.length) return;
-    const idx = playQueue.findIndex((t) => t.id === currentTrack?.id);
-    if (idx > 0) {
-      playTrack(playQueue[idx - 1]);
-    } else {
-      playTrack(playQueue[playQueue.length - 1]);
-    }
-  }, [playQueue, currentTrack, playTrack]);
-
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    if (isPlaying && currentTrack) {
-      const totalSecs = parseTime(currentTrack.time);
-      interval = setInterval(() => {
-        setCurrentTimeMs((prev) => {
-          if (prev >= totalSecs) {
-            handleNext();
-            return 0;
-          }
-          return prev + 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying, currentTrack, playQueue, handleNext]);
-
-  const handleScrubberChange = (seconds: number) => setCurrentTimeMs(seconds);
-  const handleVolumeChange = (value: number) => setVolume(value);
+  const [activeTab, setActiveTab] = useState<string>("ALL");
 
   const handleNavigate = (view: NavView, id?: string) => {
     setNavState({ view, id });
@@ -106,6 +72,7 @@ export function MainWindow({ electrobun, onToggleMini }: MainWindowProps) {
     ascii: string,
     meta: React.ReactNode
   ) => {
+    const availableGenres = ["ALL", ...Array.from(new Set(tracks.map((t) => t.genre)))];
     const filteredTracks =
       activeTab === "ALL" ? tracks : tracks.filter((t) => t.genre === activeTab);
 
@@ -118,12 +85,12 @@ export function MainWindow({ electrobun, onToggleMini }: MainWindowProps) {
           ascii={ascii}
           isPlaying={isPlaying}
         />
-        <TabNav activeTab={activeTab} onTabChange={setActiveTab} />
+        <TabNav tabs={availableGenres} activeTab={activeTab} onTabChange={setActiveTab} />
         <TrackTable
           tracks={filteredTracks}
           currentTrack={currentTrack}
           isPlaying={isPlaying}
-          onTrackClick={(track, queue) => playTrack(track, queue)}
+          onTrackClick={(track, queue) => onPlayTrack(track, queue)}
         />
       </div>
     );
@@ -192,7 +159,7 @@ export function MainWindow({ electrobun, onToggleMini }: MainWindowProps) {
           (_item) => {
             const randomTrack =
               MOCK_TRACKS[Math.floor(Math.random() * MOCK_TRACKS.length)];
-            playTrack(randomTrack, MOCK_TRACKS);
+            onPlayTrack(randomTrack, MOCK_TRACKS);
           },
           ASCII_ART.radio
         );
@@ -235,11 +202,11 @@ export function MainWindow({ electrobun, onToggleMini }: MainWindowProps) {
         isPlaying={isPlaying}
         currentTimeMs={currentTimeMs}
         volume={volume}
-        onPlayPause={() => setIsPlaying(!isPlaying)}
-        onNext={handleNext}
-        onPrev={handlePrev}
-        onScrubberChange={handleScrubberChange}
-        onVolumeChange={handleVolumeChange}
+        onPlayPause={onPlayPause}
+        onNext={onNext}
+        onPrev={onPrev}
+        onScrubberChange={onScrubberChange}
+        onVolumeChange={onVolumeChange}
         onToggleMini={onToggleMini}
       />
     </div>

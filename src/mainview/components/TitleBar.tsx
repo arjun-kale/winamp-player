@@ -1,4 +1,5 @@
 import { Minus, Square, X, Search, Download, ListMusic } from "lucide-react";
+import { APP_DISPLAY_NAME } from "../constants";
 
 type ElectrobunRpc = {
   resizeWindow?: (p: { width: number; height: number }) => void;
@@ -40,7 +41,7 @@ export function TitleBar({ electrobun }: TitleBarProps) {
         </button>
       </div>
       <div className="flex items-center gap-2 text-winamp-accent tracking-widest text-sm font-bold electrobun-webkit-app-region-drag flex-1 justify-center">
-        <ListMusic size={14} /> WINAMP PRO
+        <ListMusic size={14} /> {APP_DISPLAY_NAME.toUpperCase().replace(/\s/g, " ")}
       </div>
       <div className="flex items-center gap-4 text-winamp-accent-muted electrobun-webkit-app-region-no-drag">
         <Search size={14} className="hover:text-winamp-accent cursor-pointer transition-colors" />

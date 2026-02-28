@@ -1,3 +1,4 @@
+import { Volume2 } from "lucide-react";
 import type { Track } from "../types";
 
 type TrackRowProps = {
@@ -18,32 +19,7 @@ export function TrackRow({ track, index, isActive, isPlaying, onClick }: TrackRo
     >
       <div className="w-12 flex items-center">
         {isActive ? (
-          <div className="flex gap-0.5 items-end h-3">
-            <div
-              className="w-0.5 bg-winamp-accent visualizer-bar"
-              style={{
-                animationDelay: "0s",
-                animationDuration: "0.8s",
-                animationPlayState: isPlaying ? "running" : "paused",
-              }}
-            />
-            <div
-              className="w-0.5 bg-winamp-accent visualizer-bar"
-              style={{
-                animationDelay: "-0.2s",
-                animationDuration: "0.6s",
-                animationPlayState: isPlaying ? "running" : "paused",
-              }}
-            />
-            <div
-              className="w-0.5 bg-winamp-accent visualizer-bar"
-              style={{
-                animationDelay: "-0.4s",
-                animationDuration: "0.9s",
-                animationPlayState: isPlaying ? "running" : "paused",
-              }}
-            />
-          </div>
+          <Volume2 size={14} className={isPlaying ? "animate-pulse" : ""} />
         ) : (
           <span className="text-winamp-accent-muted">{(index + 1).toString().padStart(2, "0")}</span>
         )}

@@ -1,4 +1,4 @@
-import { Shuffle, Repeat, SkipBack, SkipForward, Maximize2 } from "lucide-react";
+import { Shuffle, Repeat, SkipBack, SkipForward, Minimize2 } from "lucide-react";
 import type { Track } from "../types";
 import { parseTime } from "../utils";
 import { Visualizer } from "./Visualizer";
@@ -75,11 +75,14 @@ export function PlayerBar({
 
         <div className="w-1/4 flex items-center justify-end gap-6">
           <VolumeSlider value={volume} onChange={onVolumeChange} />
-          <Maximize2
-            size={16}
-            className="text-winamp-accent-muted hover:text-winamp-accent cursor-pointer transition-colors"
+          <button
+            type="button"
             onClick={onToggleMini}
-          />
+            aria-label="Open mini player"
+            className="text-winamp-accent-muted hover:text-winamp-accent cursor-pointer transition-colors"
+          >
+            <Minimize2 size={16} />
+          </button>
         </div>
       </div>
     </div>
