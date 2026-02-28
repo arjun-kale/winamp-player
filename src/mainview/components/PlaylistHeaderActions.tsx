@@ -4,6 +4,7 @@ import { usePlayerStore } from "../store/playerStore";
 import type { Playlist } from "../types";
 import type { NavView } from "../types";
 import { EditPlaylistModal } from "./EditPlaylistModal";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 type PlaylistHeaderActionsProps = {
   playlist: Playlist;
@@ -12,12 +13,10 @@ type PlaylistHeaderActionsProps = {
 
 export function PlaylistHeaderActions({ playlist, onNavigate }: PlaylistHeaderActionsProps) {
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const deletePlaylist = usePlayerStore((s) => s.deletePlaylist);
 
   const handleDelete = async () => {
-    if (!confirm(`Delete playlist "${playlist.name}"? This will not remove the tracks from your library.`)) {
-      return;
-    }
     await deletePlaylist(playlist.id);
     onNavigate("playlists");
   };
@@ -33,7 +32,7 @@ export function PlaylistHeaderActions({ playlist, onNavigate }: PlaylistHeaderAc
           <Pencil size={18} />
         </button>
         <button
-          onClick={handleDelete}
+          onClick={() => setShowDeleteDialog(true)}
           className="p-1.5 rounded text-winamp-accent-muted hover:text-red-400 hover:bg-winamp-hover transition-colors"
           aria-label="Delete playlist"
         >
@@ -42,6 +41,17 @@ export function PlaylistHeaderActions({ playlist, onNavigate }: PlaylistHeaderAc
       </div>
       {showEditModal && (
         <EditPlaylistModal playlist={playlist} onClose={() => setShowEditModal(false)} />
+      )}
+      {showDeleteDialog && (
+        <ConfirmDialog
+          title="DELETE PLAYLIST"
+          message={`Delete playlist "${playlist.name}"? This will not remove the tracks from your library.`}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          variant="danger"
+          onConfirm={handleDelete}
+          onClose={() => setShowDeleteDialog(false)}
+        />
       )}
     </>
   );
