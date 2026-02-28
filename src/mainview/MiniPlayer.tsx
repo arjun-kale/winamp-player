@@ -179,7 +179,7 @@ export function MiniPlayer({
   return (
     <div
       ref={containerRef}
-      className="min-w-[380px] w-[380px] bg-winamp-panel rounded-md border border-winamp-border shadow-2xl overflow-hidden flex flex-col font-mono text-winamp-bar select-none"
+      className="min-w-[380px] w-[380px] bg-winamp-panel border-0 overflow-hidden flex flex-col font-mono text-winamp-bar select-none"
     >
       <div className="flex items-center justify-between px-2 py-2 border-b border-winamp-border electrobun-webkit-app-region-drag">
         <div className="electrobun-webkit-app-region-no-drag flex items-center gap-1">

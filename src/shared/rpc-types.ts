@@ -47,6 +47,7 @@ export type WinampRPCSchema = {
     };
     messages: {
       resizeWindow: { width: number; height: number };
+      setMinSize: { width: number; height: number };
       closeWindow: void;
       minimizeWindow: void;
       maximizeWindow: void;

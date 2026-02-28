@@ -6,10 +6,14 @@ import { useAudioEngine } from "./hooks/useAudioEngine";
 import { useThemeFromArt } from "./hooks/useThemeFromArt";
 import { AudioEngineProvider } from "./context/AudioEngineContext";
 import { ThemeProvider } from "./components/ThemeProvider";
+const MINI_WIDTH = 380;
+const MINI_HEIGHT = 776;
+
 type WinampElectrobun = {
   rpc?: {
     send?: {
       resizeWindow: (p: { width: number; height: number }) => void;
+      setMinSize: (p: { width: number; height: number }) => void;
       closeWindow: () => void;
       minimizeWindow: () => void;
       maximizeWindow: () => void;
@@ -58,9 +62,17 @@ export default function App({ electrobun }: AppProps) {
     }
   }, [rpcReady, loadLibrary, loadPlaylists]);
 
-  const switchToMini = useCallback(() => setWindowMode("mini"), []);
+  const switchToMini = useCallback(() => {
+    electrobun.rpc?.send?.setMinSize?.({ width: MINI_WIDTH, height: 600 });
+    electrobun.rpc?.send?.resizeWindow?.({
+      width: MINI_WIDTH,
+      height: MINI_HEIGHT,
+    });
+    setWindowMode("mini");
+  }, [electrobun]);
 
   const switchToMain = useCallback(() => {
+    electrobun.rpc?.send?.setMinSize?.({ width: 800, height: 600 });
     electrobun.rpc?.send?.resizeWindow?.({
       width: MAIN_WINDOW_WIDTH,
       height: MAIN_WINDOW_HEIGHT,
@@ -71,7 +83,7 @@ export default function App({ electrobun }: AppProps) {
   if (windowMode === "mini") {
     return (
       <ThemeProvider>
-        <div className="h-full w-full flex justify-center items-start pt-4">
+        <div className="h-full w-full">
           <MiniPlayer
           electrobun={electrobun}
           onExpandToMain={switchToMain}

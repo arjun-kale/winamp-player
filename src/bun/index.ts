@@ -16,6 +16,9 @@ let winampRpc: ReturnType<typeof BrowserView.defineRPC<WinampRPCSchema>>;
 const MAIN_MIN_WIDTH = 800;
 const MAIN_MIN_HEIGHT = 600;
 
+let currentMinWidth = MAIN_MIN_WIDTH;
+let currentMinHeight = MAIN_MIN_HEIGHT;
+
 async function init(): Promise<void> {
   await startAudioServer();
   const settings = loadSettings();
@@ -141,9 +144,13 @@ const rpc = BrowserView.defineRPC<WinampRPCSchema>({
     },
     messages: {
       resizeWindow: ({ width, height }) => {
-        const w = Math.max(width, MAIN_MIN_WIDTH);
-        const h = Math.max(height, MAIN_MIN_HEIGHT);
+        const w = Math.max(width, currentMinWidth);
+        const h = Math.max(height, currentMinHeight);
         mainWindow.setSize(w, h);
+      },
+      setMinSize: ({ width, height }) => {
+        currentMinWidth = width;
+        currentMinHeight = height;
       },
       closeWindow: () => mainWindow.close(),
       minimizeWindow: () => mainWindow.minimize(),
@@ -192,10 +199,10 @@ mainWindow = new BrowserWindow({
 
 mainWindow.on("resize", (event: { data: { width: number; height: number } }) => {
   const { width, height } = event.data;
-  if (width < MAIN_MIN_WIDTH || height < MAIN_MIN_HEIGHT) {
+  if (width < currentMinWidth || height < currentMinHeight) {
     mainWindow.setSize(
-      Math.max(width, MAIN_MIN_WIDTH),
-      Math.max(height, MAIN_MIN_HEIGHT)
+      Math.max(width, currentMinWidth),
+      Math.max(height, currentMinHeight)
     );
   }
 });
