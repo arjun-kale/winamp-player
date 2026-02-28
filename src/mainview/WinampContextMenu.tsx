@@ -92,7 +92,7 @@ export function WinampContextMenu({
               onAction(menuItem.action);
               onClose();
             }}
-            className="w-full flex items-center gap-2 px-3 py-2 text-left text-winamp-text hover:bg-[#1a261e] hover:text-winamp-text-bright transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 text-left text-winamp-bar hover:bg-winamp-hover hover:text-winamp-accent transition-colors"
           >
             {menuItem.action === "playPause" ? (
               isPlaying ? (

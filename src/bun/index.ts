@@ -45,9 +45,9 @@ mainWindow = new BrowserWindow({
 	title: "Winamp Player",
 	url: "views://mainview/index.html",
 	frame: {
-		width: 400,
-		height: 700,
-		x: 200,
+		width: 1200,
+		height: 800,
+		x: 100,
 		y: 100,
 	},
 	titleBarStyle: "hidden",

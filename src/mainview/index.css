@@ -3,13 +3,23 @@
 
 @theme {
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  --color-winamp-bg: #0a0f0c;
-  --color-winamp-panel: #111a15;
-  --color-winamp-border: #2a3b30;
-  --color-winamp-muted: #59705f;
-  --color-winamp-bar: #849e8a;
-  --color-winamp-text: #a9c2ae;
-  --color-winamp-text-bright: #c5d9c9;
+
+  /* Core palette - unified from reference and current app */
+  --color-winamp-bg: #080c09;
+  --color-winamp-panel: #0d1410;
+  --color-winamp-panel-alt: #0a0f0c;
+  --color-winamp-border: #1a2b1f;
+  --color-winamp-muted: #4b7556;
+  --color-winamp-bar: #71a67d;
+  --color-winamp-text: #5c8a68;
+  --color-winamp-text-bright: #98e0a7;
+
+  /* Semantic aliases */
+  --color-winamp-hover: #121c15;
+  --color-winamp-accent: #98e0a7;
+  --color-winamp-accent-muted: #4b7556;
+  --color-winamp-scrollbar: #2a4030;
+  --color-winamp-scrollbar-hover: #4b7556;
 }
 
 html,
@@ -17,30 +27,60 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: #0a0f0c;
-  font-family: "JetBrains Mono", monospace;
-  color: #a9c2ae;
+  background-color: var(--color-winamp-bg);
+  font-family: var(--font-mono);
+  color: var(--color-winamp-bar);
 }
 
 body {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  min-height: 0;
-  height: fit-content;
+  height: 100vh;
+  width: 100%;
 }
 
-/* Custom Scrollbar */
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+/* --- Animations --- */
+@keyframes equalize {
+  0% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+  100% {
+    transform: scaleY(0.3);
+  }
+}
+
+.visualizer-bar {
+  animation: equalize 1s infinite ease-in-out;
+  transform-origin: bottom;
+}
+
+/* --- Custom Terminal Scrollbar --- */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
+
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--color-winamp-bg);
+  border-left: 1px solid var(--color-winamp-border);
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #a9c2ae;
-  border-radius: 3px;
+  background: var(--color-winamp-scrollbar);
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #c5d9c9;
+  background: var(--color-winamp-scrollbar-hover);
+}
+
+/* --- Selection --- */
+::selection {
+  background: var(--color-winamp-accent);
+  color: var(--color-winamp-bg);
 }

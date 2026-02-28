@@ -1,0 +1,87 @@
+import { Shuffle, Repeat, SkipBack, SkipForward, Maximize2 } from "lucide-react";
+import type { Track } from "../types";
+import { parseTime } from "../utils";
+import { Visualizer } from "./Visualizer";
+import { Scrubber } from "./Scrubber";
+import { VolumeSlider } from "./VolumeSlider";
+import { PlayPauseButton } from "./PlayPauseButton";
+
+type PlayerBarProps = {
+  currentTrack: Track | null;
+  isPlaying: boolean;
+  currentTimeMs: number;
+  volume: number;
+  onPlayPause: () => void;
+  onNext: () => void;
+  onPrev: () => void;
+  onScrubberChange: (seconds: number) => void;
+  onVolumeChange: (value: number) => void;
+  onToggleMini?: () => void;
+};
+
+export function PlayerBar({
+  currentTrack,
+  isPlaying,
+  currentTimeMs,
+  volume,
+  onPlayPause,
+  onNext,
+  onPrev,
+  onScrubberChange,
+  onVolumeChange,
+  onToggleMini,
+}: PlayerBarProps) {
+  const totalCurrentSecs = currentTrack ? parseTime(currentTrack.time) : 0;
+
+  return (
+    <div className="h-28 bg-winamp-panel border-t border-winamp-border flex flex-col shrink-0">
+      <div className="h-6 w-full px-6 flex items-end gap-[2px] pt-2 border-b border-winamp-border/50">
+        <Visualizer count={120} heightClass="h-full" isPlaying={isPlaying} />
+      </div>
+
+      <div className="flex-1 flex items-center justify-between px-6">
+        <div className="w-1/4 flex items-center gap-4">
+          {currentTrack && (
+            <div>
+              <div className="text-lg font-bold text-winamp-accent mb-1 leading-none">{currentTrack.title}</div>
+              <div className="text-sm text-winamp-accent-muted leading-none">{currentTrack.artist}</div>
+            </div>
+          )}
+        </div>
+
+        <div className="w-2/4 flex flex-col items-center justify-center gap-2 max-w-2xl">
+          <Scrubber
+            value={currentTimeMs}
+            max={totalCurrentSecs}
+            maxLabel={currentTrack?.time ?? "0:00"}
+            onChange={onScrubberChange}
+          />
+          <div className="flex items-center gap-6 mt-1">
+            <Shuffle size={16} className="text-winamp-accent-muted hover:text-winamp-accent cursor-pointer transition-colors" />
+            <SkipBack
+              onClick={onPrev}
+              size={20}
+              className="text-winamp-bar hover:text-winamp-accent cursor-pointer fill-current transition-colors"
+            />
+            <PlayPauseButton isPlaying={isPlaying} onToggle={onPlayPause} />
+            <SkipForward
+              onClick={onNext}
+              size={20}
+              className="text-winamp-bar hover:text-winamp-accent cursor-pointer fill-current transition-colors"
+            />
+            <Repeat size={16} className="text-winamp-accent-muted hover:text-winamp-accent cursor-pointer transition-colors" />
+          </div>
+        </div>
+
+        <div className="w-1/4 flex items-center justify-end gap-6">
+          <VolumeSlider value={volume} onChange={onVolumeChange} />
+          <Maximize2
+            size={16}
+            className="text-winamp-accent-muted hover:text-winamp-accent cursor-pointer transition-colors"
+            onClick={onToggleMini}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
