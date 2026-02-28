@@ -42,10 +42,19 @@ export function PlayerBar({
       <div className="flex-1 flex items-center justify-between px-6">
         <div className="w-1/4 flex items-center gap-4">
           {currentTrack && (
-            <div>
-              <div className="text-lg font-bold text-winamp-accent mb-1 leading-none">{currentTrack.title}</div>
-              <div className="text-sm text-winamp-accent-muted leading-none">{currentTrack.artist}</div>
-            </div>
+            <>
+              {currentTrack.picture && (
+                <img
+                  src={currentTrack.picture}
+                  alt=""
+                  className="w-12 h-12 object-cover border border-winamp-border flex-shrink-0"
+                />
+              )}
+              <div>
+                <div className="text-lg font-bold text-winamp-accent mb-1 leading-none">{currentTrack.title}</div>
+                <div className="text-sm text-winamp-accent-muted leading-none">{currentTrack.artist}</div>
+              </div>
+            </>
           )}
         </div>
 

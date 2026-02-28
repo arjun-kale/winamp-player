@@ -1,10 +1,11 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { MainWindow } from "./MainWindow";
 import { MiniPlayer } from "./MiniPlayer";
-import type { Track } from "./types";
-import { parseTime } from "./utils";
-import { MOCK_TRACKS, MOCK_MIXES } from "./data/mock";
-
+import { usePlayerStore } from "./store/playerStore";
+import { useAudioEngine } from "./hooks/useAudioEngine";
+import { useThemeFromArt } from "./hooks/useThemeFromArt";
+import { AudioEngineProvider } from "./context/AudioEngineContext";
+import { ThemeProvider } from "./components/ThemeProvider";
 type WinampElectrobun = {
   rpc?: {
     send?: {
@@ -13,6 +14,7 @@ type WinampElectrobun = {
       minimizeWindow: () => void;
       maximizeWindow: () => void;
     };
+    request?: unknown;
   };
 };
 
@@ -23,23 +25,40 @@ type AppProps = {
 const MAIN_WINDOW_WIDTH = 1200;
 const MAIN_WINDOW_HEIGHT = 800;
 
-const defaultMix = MOCK_MIXES.find((m) => m.id === "mix3") ?? MOCK_MIXES[0];
-const defaultTrack = MOCK_TRACKS.find((t) => t.id === 4) ?? MOCK_TRACKS[0];
-const defaultPlayQueue = defaultMix.tracks
-  .map((id) => MOCK_TRACKS.find((t) => t.id === id))
-  .filter((t): t is Track => t != null);
-
 export default function App({ electrobun }: AppProps) {
   const [windowMode, setWindowMode] = useState<"main" | "mini">("main");
-  const [currentTrack, setCurrentTrack] = useState<Track>(defaultTrack);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [playQueue, setPlayQueue] = useState<Track[]>(defaultPlayQueue);
-  const [currentTimeMs, setCurrentTimeMs] = useState(29);
-  const [volume, setVolume] = useState(0.75);
+  const initRef = useRef(false);
 
-  const switchToMini = useCallback(() => {
-    setWindowMode("mini");
-  }, []);
+  const { setRpc, loadLibrary, loadPlaylists, player } = usePlayerStore();
+  const playTrack = usePlayerStore((s) => s.playTrack);
+  const togglePlay = usePlayerStore((s) => s.togglePlay);
+  const setCurrentTime = usePlayerStore((s) => s.setCurrentTime);
+  const setVolume = usePlayerStore((s) => s.setVolume);
+  const handleNext = usePlayerStore((s) => s.handleNext);
+  const handlePrev = usePlayerStore((s) => s.handlePrev);
+
+  const { analyserRef, analyserReady } = useAudioEngine();
+  useThemeFromArt();
+
+  const rpcReady = usePlayerStore((s) => s.rpc !== null);
+
+  useEffect(() => {
+    const rpc = electrobun.rpc;
+    if (rpc && rpc.request) {
+      setRpc(rpc as Parameters<typeof setRpc>[0]);
+    }
+    return () => setRpc(null);
+  }, [electrobun, setRpc]);
+
+  useEffect(() => {
+    if (!initRef.current && rpcReady) {
+      initRef.current = true;
+      loadLibrary();
+      loadPlaylists();
+    }
+  }, [rpcReady, loadLibrary, loadPlaylists]);
+
+  const switchToMini = useCallback(() => setWindowMode("mini"), []);
 
   const switchToMain = useCallback(() => {
     electrobun.rpc?.send?.resizeWindow?.({
@@ -49,87 +68,49 @@ export default function App({ electrobun }: AppProps) {
     setWindowMode("main");
   }, [electrobun]);
 
-  const playTrack = useCallback((track: Track, newQueue: Track[] | null = null) => {
-    setCurrentTrack(track);
-    if (newQueue) setPlayQueue(newQueue);
-    setIsPlaying(true);
-    setCurrentTimeMs(0);
-  }, []);
-
-  const handleNext = useCallback(() => {
-    if (!playQueue.length) return;
-    const idx = playQueue.findIndex((t) => t.id === currentTrack?.id);
-    if (idx !== -1 && idx < playQueue.length - 1) {
-      playTrack(playQueue[idx + 1]);
-    } else {
-      playTrack(playQueue[0]);
-    }
-  }, [playQueue, currentTrack, playTrack]);
-
-  const handlePrev = useCallback(() => {
-    if (!playQueue.length) return;
-    const idx = playQueue.findIndex((t) => t.id === currentTrack?.id);
-    if (idx > 0) {
-      playTrack(playQueue[idx - 1]);
-    } else {
-      playTrack(playQueue[playQueue.length - 1]);
-    }
-  }, [playQueue, currentTrack, playTrack]);
-
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    if (isPlaying && currentTrack) {
-      const totalSecs = parseTime(currentTrack.time);
-      interval = setInterval(() => {
-        setCurrentTimeMs((prev) => {
-          if (prev >= totalSecs) {
-            handleNext();
-            return 0;
-          }
-          return prev + 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying, currentTrack, playQueue, handleNext]);
-
   if (windowMode === "mini") {
     return (
-      <div className="h-full w-full flex justify-center items-start pt-4">
-        <MiniPlayer
+      <ThemeProvider>
+        <div className="h-full w-full flex justify-center items-start pt-4">
+          <MiniPlayer
           electrobun={electrobun}
           onExpandToMain={switchToMain}
-          currentTrack={currentTrack}
-          isPlaying={isPlaying}
-          playQueue={playQueue}
-          currentTimeMs={currentTimeMs}
-          volume={volume}
-          onPlayPause={() => setIsPlaying((p) => !p)}
+          currentTrack={player.currentTrack}
+          isPlaying={player.isPlaying}
+          playQueue={player.queue}
+          currentTimeMs={player.currentTime}
+          volume={player.volume}
+          onPlayPause={togglePlay}
           onNext={handleNext}
           onPrev={handlePrev}
-          onScrubberChange={setCurrentTimeMs}
+          onScrubberChange={setCurrentTime}
           onVolumeChange={setVolume}
-          onTrackSelect={playTrack}
+          onTrackSelect={(track, queue) => playTrack(track, queue)}
         />
-      </div>
+        </div>
+      </ThemeProvider>
     );
   }
 
   return (
-    <MainWindow
-      electrobun={electrobun}
-      onToggleMini={switchToMini}
-      currentTrack={currentTrack}
-      isPlaying={isPlaying}
-      playQueue={playQueue}
-      currentTimeMs={currentTimeMs}
-      volume={volume}
-      onPlayTrack={playTrack}
-      onPlayPause={() => setIsPlaying((p) => !p)}
-      onNext={handleNext}
-      onPrev={handlePrev}
-      onScrubberChange={setCurrentTimeMs}
-      onVolumeChange={setVolume}
-    />
+    <ThemeProvider>
+      <AudioEngineProvider analyserRef={analyserRef} analyserReady={analyserReady}>
+        <MainWindow
+        electrobun={electrobun}
+        onToggleMini={switchToMini}
+        currentTrack={player.currentTrack}
+        isPlaying={player.isPlaying}
+        playQueue={player.queue}
+        currentTimeMs={player.currentTime}
+        volume={player.volume}
+        onPlayTrack={(track, queue) => playTrack(track, queue)}
+        onPlayPause={togglePlay}
+        onNext={handleNext}
+        onPrev={handlePrev}
+        onScrubberChange={setCurrentTime}
+        onVolumeChange={setVolume}
+      />
+      </AudioEngineProvider>
+    </ThemeProvider>
   );
 }

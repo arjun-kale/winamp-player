@@ -1,10 +1,12 @@
-import { Disc, Mic2, ListMusic, Radio, Clock, Heart, Settings } from "lucide-react";
+import { useState } from "react";
+import { Disc, Mic2, ListMusic, Radio, Clock, FolderOpen, Settings, Plus } from "lucide-react";
 import type { NavState, NavView } from "../types";
-import type { Mix } from "../types";
+import type { Playlist } from "../types";
+import { CreatePlaylistModal } from "./CreatePlaylistModal";
 
 type SidebarProps = {
   navState: NavState;
-  mixes: Mix[];
+  playlists: Playlist[];
   onNavigate: (view: NavView, id?: string) => void;
 };
 
@@ -12,11 +14,14 @@ const NAV_ITEMS: { id: NavView; icon: typeof Disc; label: string }[] = [
   { id: "library", icon: Disc, label: "All Tracks" },
   { id: "artists", icon: Mic2, label: "Artists" },
   { id: "playlists", icon: ListMusic, label: "Playlists" },
-  { id: "radio", icon: Radio, label: "Radio Streams" },
+  { id: "folders", icon: FolderOpen, label: "Folders" },
+  { id: "radio", icon: Radio, label: "Radio" },
   { id: "recent", icon: Clock, label: "Recently Played" },
 ];
 
-export function Sidebar({ navState, mixes, onNavigate }: SidebarProps) {
+export function Sidebar({ navState, playlists, onNavigate }: SidebarProps) {
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
   return (
     <div className="w-64 border-r border-winamp-border bg-winamp-panel-alt flex flex-col flex-shrink-0">
       <div className="p-6">
@@ -42,28 +47,45 @@ export function Sidebar({ navState, mixes, onNavigate }: SidebarProps) {
       </div>
 
       <div className="px-6 py-4 border-t border-winamp-border flex-1">
-        <div className="flex items-center justify-between mb-4">
-          <div className="text-winamp-accent-muted text-xs tracking-[0.2em]">YOUR MIXES</div>
-          <Heart size={12} className="text-winamp-accent-muted" />
+        <div className="flex justify-between items-center mb-4">
+          <div className="text-winamp-accent-muted text-xs tracking-[0.2em]">PLAYLISTS</div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="p-1 text-winamp-accent-muted hover:text-winamp-accent"
+            aria-label="Create playlist"
+          >
+            <Plus size={14} />
+          </button>
         </div>
         <div className="space-y-2 text-sm text-winamp-text">
-          {mixes.map((mix) => (
+          {playlists.map((pl) => (
             <div
-              key={mix.id}
-              onClick={() => onNavigate("mix", mix.id)}
+              key={pl.id}
+              onClick={() => onNavigate("playlist_detail", pl.id)}
               className={`cursor-pointer truncate transition-colors ${
-                navState.view === "mix" && navState.id === mix.id ? "text-winamp-accent" : "hover:text-winamp-accent"
+                navState.view === "playlist_detail" && navState.id === pl.id
+                  ? "text-winamp-accent"
+                  : "hover:text-winamp-accent"
               }`}
             >
-              &gt; {mix.name}
+              &gt; {pl.name}
             </div>
           ))}
+          {playlists.length === 0 && (
+            <div className="text-winamp-accent-muted text-xs">No playlists yet</div>
+          )}
         </div>
       </div>
 
-      <div className="p-4 border-t border-winamp-border flex items-center gap-3 text-sm text-winamp-accent-muted hover:text-winamp-accent cursor-pointer transition-colors">
-        <Settings size={16} /> SETTINGS
+      <div
+        className="p-4 border-t border-winamp-border flex items-center gap-3 text-sm text-winamp-accent-muted hover:text-winamp-accent cursor-pointer transition-colors"
+        onClick={() => onNavigate("folders")}
+      >
+        <Settings size={16} /> FOLDERS
       </div>
+      {showCreateModal && (
+        <CreatePlaylistModal onClose={() => setShowCreateModal(false)} />
+      )}
     </div>
   );
 }

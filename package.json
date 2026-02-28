@@ -13,10 +13,13 @@
     "build:stable": "electrobun build --env=stable"
   },
   "dependencies": {
+    "colorthief": "^2.7.0",
     "electrobun": "1.14.4",
     "lucide-react": "latest",
+    "music-metadata": "^11.12.1",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.1",

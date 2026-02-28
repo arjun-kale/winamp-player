@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { WinampContextMenu } from "./WinampContextMenu";
 import {
@@ -33,7 +33,7 @@ type WinampElectrobun = {
 type MiniPlayerProps = {
   electrobun: WinampElectrobun;
   onExpandToMain?: () => void;
-  currentTrack: Track;
+  currentTrack: Track | null;
   isPlaying: boolean;
   playQueue: Track[];
   currentTimeMs: number;
@@ -118,7 +118,7 @@ export function MiniPlayer({
   const [eqValues, setEqValues] = useState<number[]>(BASE_EQ_CURVE);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
-  const totalDurationSecs = Math.max(1, parseTime(currentTrack.time));
+  const totalDurationSecs = Math.max(1, currentTrack ? parseTime(currentTrack.time) : 0);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
@@ -230,8 +230,8 @@ export function MiniPlayer({
         </div>
 
         <div className="mb-5">
-          <h2 className="text-lg font-bold text-winamp-accent mb-1">{currentTrack.title}</h2>
-          <p className="text-sm text-winamp-accent-muted">{currentTrack.artist}</p>
+          <h2 className="text-lg font-bold text-winamp-accent mb-1">{currentTrack?.title ?? "No track"}</h2>
+          <p className="text-sm text-winamp-accent-muted">{currentTrack?.artist ?? ""}</p>
         </div>
 
         <div className="flex items-center gap-3 mb-5 text-xs text-winamp-accent-muted">
@@ -325,7 +325,7 @@ export function MiniPlayer({
 
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {playQueue.map((track, index) => {
-            const isActive = track.id === currentTrack.id;
+            const isActive = track.id === currentTrack?.id;
             return (
               <div
                 key={`${track.id}-${index}`}
