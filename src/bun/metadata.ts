@@ -40,7 +40,7 @@ export async function getTrackMetadata(filePath: string): Promise<TrackMetadata 
       duration,
       genre: common.genre?.[0] ?? "Unknown",
       picture: picture
-        ? `data:${picture.format};base64,${picture.data.toString("base64")}`
+        ? `data:${picture.format};base64,${Buffer.from(picture.data).toString("base64")}`
         : undefined,
     };
 

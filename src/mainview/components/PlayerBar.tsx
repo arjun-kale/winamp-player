@@ -1,7 +1,6 @@
 import { Shuffle, Repeat, SkipBack, SkipForward, Minimize2 } from "lucide-react";
 import type { Track } from "../types";
 import { parseTime } from "../utils";
-import { Visualizer } from "./Visualizer";
 import { Scrubber } from "./Scrubber";
 import { VolumeSlider } from "./VolumeSlider";
 import { PlayPauseButton } from "./PlayPauseButton";
@@ -35,10 +34,6 @@ export function PlayerBar({
 
   return (
     <div className="h-28 bg-winamp-panel border-t border-winamp-border flex flex-col shrink-0">
-      <div className="h-6 w-full px-6 flex items-end gap-[2px] pt-2 border-b border-winamp-border/50">
-        <Visualizer count={120} heightClass="h-full" isPlaying={isPlaying} />
-      </div>
-
       <div className="flex-1 flex items-center justify-between px-6">
         <div className="w-1/4 flex items-center gap-4">
           {currentTrack && (

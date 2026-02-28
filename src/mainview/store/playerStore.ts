@@ -130,15 +130,19 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
       let folders = await rpc.request.getWatchFolders();
       if (folders.length === 0) {
         const defaultPath = await rpc.request.getDefaultMusicPath();
-        await rpc.request.addFolder({ path: defaultPath });
-        folders = await rpc.request.getWatchFolders();
-        if (folders.length === 0) {
+        const addResult = await rpc.request.addFolder({ path: defaultPath });
+        if (!addResult.success) {
           set((s) => ({
-            library: { tracks: [], loading: false, error: "No folders to scan" },
+            library: {
+              tracks: [],
+              loading: false,
+              error: addResult.error ?? "Could not add folder",
+            },
             settings: { watchFolders: [] },
           }));
           return;
         }
+        folders = await rpc.request.getWatchFolders();
       }
 
       const allFolders = folders;

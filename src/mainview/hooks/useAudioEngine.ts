@@ -86,7 +86,7 @@ export function useAudioEngine() {
 
   useEffect(() => {
     const el = audioRef.current;
-    if (el && Math.abs(el.currentTime - player.currentTime) > 1) {
+    if (el && Math.abs(el.currentTime - player.currentTime) > 0.05) {
       el.currentTime = player.currentTime;
     }
   }, [player.currentTime]);

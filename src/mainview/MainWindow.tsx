@@ -156,7 +156,13 @@ export function MainWindow({
         <div className="flex-1 flex items-center justify-center text-winamp-accent-muted">
           <div className="text-center">
             <div className="text-lg mb-2">NO TRACKS FOUND</div>
-            <div className="text-sm">Add more folders or check your music library</div>
+            <div className="text-sm mb-4">Add more folders or check your music library</div>
+            <button
+              onClick={() => handleNavigate("folders")}
+              className="px-4 py-2 bg-winamp-border hover:bg-winamp-accent-muted text-winamp-bar text-sm"
+            >
+              Manage folders
+            </button>
           </div>
         </div>
       );

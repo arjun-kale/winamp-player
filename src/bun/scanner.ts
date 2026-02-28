@@ -27,7 +27,8 @@ function walk(dir: string, result: ScannedFile[], seen: Set<string>): void {
   let entries: fs.Dirent[];
   try {
     entries = fs.readdirSync(dir, { withFileTypes: true });
-  } catch {
+  } catch (err) {
+    console.warn("Scanner could not read:", dir, err);
     return;
   }
 
