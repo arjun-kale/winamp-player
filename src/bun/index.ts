@@ -130,6 +130,19 @@ const rpc = BrowserView.defineRPC<WinampRPCSchema>({
 
       getPlaylistsDir: () => PLAYLISTS_DIR,
 
+      renamePlaylist: ({ oldPath, newName }) => {
+        const pl = loadPlaylist(oldPath);
+        if (!pl) return;
+        const dir = path.dirname(oldPath);
+        const cleanName = newName.replace(/\.m3u8?$/i, "");
+        savePlaylist(dir, cleanName, pl.entries.map((e) => e.path));
+        fs.unlinkSync(oldPath);
+      },
+
+      deletePlaylist: ({ path: filePath }) => {
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      },
+
       importPlaylist: ({ path: filePath }) => {
         const pl = loadPlaylist(filePath);
         if (!pl) return false;

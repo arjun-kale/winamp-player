@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { MainWindow } from "./MainWindow";
 import { MiniPlayer } from "./MiniPlayer";
+import { WinampContextMenu } from "./WinampContextMenu";
 import { usePlayerStore } from "./store/playerStore";
 import { useAudioEngine } from "./hooks/useAudioEngine";
 import { useThemeFromArt } from "./hooks/useThemeFromArt";
@@ -31,6 +33,7 @@ const MAIN_WINDOW_HEIGHT = 800;
 
 export default function App({ electrobun }: AppProps) {
   const [windowMode, setWindowMode] = useState<"main" | "mini">("main");
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const initRef = useRef(false);
 
   const { setRpc, loadLibrary, loadPlaylists, player } = usePlayerStore();
@@ -62,6 +65,41 @@ export default function App({ electrobun }: AppProps) {
     }
   }, [rpcReady, loadLibrary, loadPlaylists]);
 
+  useEffect(() => {
+    const handler = (e: CustomEvent<{ x: number; y: number }>) => {
+      setContextMenu({ x: e.detail.x, y: e.detail.y });
+    };
+    const wrapped = (e: Event) => handler(e as CustomEvent<{ x: number; y: number }>);
+    document.addEventListener("winamp-show-context-menu", wrapped);
+    return () => document.removeEventListener("winamp-show-context-menu", wrapped);
+  }, []);
+
+  const handleContextMenuAction = useCallback((action: string) => {
+    document.dispatchEvent(new CustomEvent("winamp-context-action", { detail: action }));
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: CustomEvent<string>) => {
+      switch (e.detail) {
+        case "playPause":
+          togglePlay();
+          break;
+        case "prev":
+          handlePrev();
+          break;
+        case "next":
+          handleNext();
+          break;
+        case "close":
+          electrobun.rpc?.send?.closeWindow?.();
+          break;
+      }
+    };
+    const wrapped = (e: Event) => handler(e as CustomEvent<string>);
+    document.addEventListener("winamp-context-action", wrapped);
+    return () => document.removeEventListener("winamp-context-action", wrapped);
+  }, [togglePlay, handlePrev, handleNext, electrobun]);
+
   const switchToMini = useCallback(() => {
     electrobun.rpc?.send?.setMinSize?.({ width: MINI_WIDTH, height: 600 });
     electrobun.rpc?.send?.resizeWindow?.({
@@ -80,49 +118,56 @@ export default function App({ electrobun }: AppProps) {
     setWindowMode("main");
   }, [electrobun]);
 
-  if (windowMode === "mini") {
-    return (
-      <ThemeProvider>
-        <div className="h-full w-full">
-          <MiniPlayer
-          electrobun={electrobun}
-          onExpandToMain={switchToMain}
-          currentTrack={player.currentTrack}
-          isPlaying={player.isPlaying}
-          playQueue={player.queue}
-          currentTimeMs={player.currentTime}
-          volume={player.volume}
-          onPlayPause={togglePlay}
-          onNext={handleNext}
-          onPrev={handlePrev}
-          onScrubberChange={setCurrentTime}
-          onVolumeChange={setVolume}
-          onTrackSelect={(track, queue) => playTrack(track, queue)}
-        />
-        </div>
-      </ThemeProvider>
-    );
-  }
-
   return (
     <ThemeProvider>
-      <AudioEngineProvider analyserRef={analyserRef} analyserReady={analyserReady}>
-        <MainWindow
-        electrobun={electrobun}
-        onToggleMini={switchToMini}
-        currentTrack={player.currentTrack}
-        isPlaying={player.isPlaying}
-        playQueue={player.queue}
-        currentTimeMs={player.currentTime}
-        volume={player.volume}
-        onPlayTrack={(track, queue) => playTrack(track, queue)}
-        onPlayPause={togglePlay}
-        onNext={handleNext}
-        onPrev={handlePrev}
-        onScrubberChange={setCurrentTime}
-        onVolumeChange={setVolume}
-      />
-      </AudioEngineProvider>
+      {windowMode === "mini" ? (
+        <div className="h-full w-full">
+          <MiniPlayer
+            electrobun={electrobun}
+            onExpandToMain={switchToMain}
+            currentTrack={player.currentTrack}
+            isPlaying={player.isPlaying}
+            playQueue={player.queue}
+            currentTimeMs={player.currentTime}
+            volume={player.volume}
+            onPlayPause={togglePlay}
+            onNext={handleNext}
+            onPrev={handlePrev}
+            onScrubberChange={setCurrentTime}
+            onVolumeChange={setVolume}
+            onTrackSelect={(track, queue) => playTrack(track, queue)}
+          />
+        </div>
+      ) : (
+        <AudioEngineProvider analyserRef={analyserRef} analyserReady={analyserReady}>
+          <MainWindow
+            electrobun={electrobun}
+            onToggleMini={switchToMini}
+            currentTrack={player.currentTrack}
+            isPlaying={player.isPlaying}
+            playQueue={player.queue}
+            currentTimeMs={player.currentTime}
+            volume={player.volume}
+            onPlayTrack={(track, queue) => playTrack(track, queue)}
+            onPlayPause={togglePlay}
+            onNext={handleNext}
+            onPrev={handlePrev}
+            onScrubberChange={setCurrentTime}
+            onVolumeChange={setVolume}
+          />
+        </AudioEngineProvider>
+      )}
+      {contextMenu &&
+        createPortal(
+          <WinampContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            isPlaying={player.isPlaying}
+            onAction={handleContextMenuAction}
+            onClose={() => setContextMenu(null)}
+          />,
+          document.body
+        )}
     </ThemeProvider>
   );
 }

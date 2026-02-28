@@ -20,6 +20,7 @@ export function TrackRow({ track, index, isActive, isPlaying, onClick }: TrackRo
         onClick={onClick}
         onContextMenu={(e) => {
           e.preventDefault();
+          e.stopPropagation();
           setContextMenu({ x: e.clientX, y: e.clientY });
         }}
       className={`flex px-8 py-3 text-sm group transition-colors border-b border-winamp-border/30 cursor-pointer ${

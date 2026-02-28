@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Track, NavState, NavView } from "./types";
 import { usePlayerStore } from "./store/playerStore";
 import { ASCII_ART } from "./data/mock";
+import { formatTotalDuration } from "./utils";
 import { TitleBar } from "./components/TitleBar";
 import { Sidebar } from "./components/Sidebar";
 import { PlayerBar } from "./components/PlayerBar";
@@ -11,6 +12,7 @@ import { TrackTable } from "./components/TrackTable";
 import { GridView } from "./components/GridView";
 import { FoldersView } from "./components/FoldersView";
 import { EmptyLibrary } from "./components/EmptyLibrary";
+import { PlaylistHeaderActions } from "./components/PlaylistHeaderActions";
 
 type WinampElectrobun = {
   rpc?: {
@@ -75,7 +77,8 @@ export function MainWindow({
     subtitle: string,
     tracks: Track[],
     ascii: string,
-    meta: React.ReactNode
+    meta: React.ReactNode,
+    extraActions?: React.ReactNode
   ) => (
     <div className="flex-1 flex flex-col overflow-hidden relative">
       <HeroHeader
@@ -84,6 +87,7 @@ export function MainWindow({
         meta={meta}
         ascii={ascii}
         isPlaying={isPlaying}
+        actions={extraActions}
       />
       <TabNav
         tabs={["ALL", ...Array.from(new Set(tracks.map((t) => t.genre).filter(Boolean)))]}
@@ -175,7 +179,7 @@ export function MainWindow({
           "SYSTEM.LIBRARY",
           library.tracks,
           ASCII_ART.library,
-          `${library.tracks.length} TRACKS`
+          `${library.tracks.length} TRACKS • ${formatTotalDuration(library.tracks)}`
         );
 
       case "artists":
@@ -194,7 +198,7 @@ export function MainWindow({
           "ARTIST OVERVIEW",
           artistTracks,
           ASCII_ART.artist,
-          `${artistTracks.length} TRACKS`
+          `${artistTracks.length} TRACKS • ${formatTotalDuration(artistTracks)}`
         );
       }
 
@@ -209,12 +213,19 @@ export function MainWindow({
 
       case "playlist_detail": {
         const plTracks = loadPlaylistTracks(navState.id ?? "");
+        const activePlaylist = playlists.items.find((p) => p.id === navState.id);
         return renderTracklistView(
-          playlists.items.find((p) => p.id === navState.id)?.name.toUpperCase() ?? "PLAYLIST",
+          activePlaylist?.name.toUpperCase() ?? "PLAYLIST",
           "USER.COLLECTION",
           plTracks,
           ASCII_ART.library,
-          `${plTracks.length} TRACKS`
+          `${plTracks.length} TRACKS • ${formatTotalDuration(plTracks)}`,
+          activePlaylist && (
+            <PlaylistHeaderActions
+              playlist={activePlaylist}
+              onNavigate={handleNavigate}
+            />
+          )
         );
       }
 
@@ -231,24 +242,28 @@ export function MainWindow({
           </div>
         );
 
-      case "recent":
+      case "recent": {
+        const recentTracks = [...library.tracks].slice(0, 20);
         return renderTracklistView(
           "RECENTLY PLAYED",
           "SYSTEM.HISTORY",
-          [...library.tracks].slice(0, 20),
+          recentTracks,
           ASCII_ART.library,
-          "LAST TRACKS"
+          `${recentTracks.length} TRACKS • ${formatTotalDuration(recentTracks)}`
         );
+      }
 
       case "mix":
-      default:
+      default: {
+        const mixTracks = playQueue.length > 0 ? playQueue : library.tracks.slice(0, 10);
         return renderTracklistView(
           "NOW PLAYING",
           "QUEUE",
-          playQueue.length > 0 ? playQueue : library.tracks.slice(0, 10),
+          mixTracks,
           ASCII_ART.mix,
-          `${playQueue.length || library.tracks.length} TRACKS`
+          `${mixTracks.length} TRACKS • ${formatTotalDuration(mixTracks)}`
         );
+      }
     }
   };
 

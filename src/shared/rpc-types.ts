@@ -42,6 +42,8 @@ export type WinampRPCSchema = {
       };
       listPlaylists: { params: void; response: PlaylistResult[] };
       getPlaylistsDir: { params: void; response: string };
+      renamePlaylist: { params: { oldPath: string; newName: string }; response: void };
+      deletePlaylist: { params: { path: string }; response: void };
       importPlaylist: { params: { path: string }; response: boolean };
       exportPlaylist: { params: { name: string; entries: string[] }; response: string };
     };

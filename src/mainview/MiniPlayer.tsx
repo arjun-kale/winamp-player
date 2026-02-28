@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { createPortal } from "react-dom";
-import { WinampContextMenu } from "./WinampContextMenu";
 import {
   Music,
   Play,
@@ -116,7 +114,6 @@ export function MiniPlayer({
 }: MiniPlayerProps) {
   const send = electrobun.rpc?.send;
   const [eqValues, setEqValues] = useState<number[]>(BASE_EQ_CURVE);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   const totalDurationSecs = Math.max(1, currentTrack ? parseTime(currentTrack.time) : 0);
 
@@ -137,41 +134,6 @@ export function MiniPlayer({
     }
     return () => clearInterval(interval);
   }, [isPlaying]);
-
-  useEffect(() => {
-    const handler = (e: CustomEvent<{ x: number; y: number }>) => {
-      setContextMenu({ x: e.detail.x, y: e.detail.y });
-    };
-    const wrapped = (e: Event) => handler(e as CustomEvent<{ x: number; y: number }>);
-    document.addEventListener("winamp-show-context-menu", wrapped);
-    return () => document.removeEventListener("winamp-show-context-menu", wrapped);
-  }, []);
-
-  const handleContextMenuAction = useCallback((action: string) => {
-    document.dispatchEvent(new CustomEvent("winamp-context-action", { detail: action }));
-  }, []);
-
-  useEffect(() => {
-    const handler = (e: CustomEvent<string>) => {
-      switch (e.detail) {
-        case "playPause":
-          onPlayPause();
-          break;
-        case "prev":
-          onPrev();
-          break;
-        case "next":
-          onNext();
-          break;
-        case "close":
-          send?.closeWindow?.();
-          break;
-      }
-    };
-    const wrapped = (e: Event) => handler(e as CustomEvent<string>);
-    document.addEventListener("winamp-context-action", wrapped);
-    return () => document.removeEventListener("winamp-context-action", wrapped);
-  }, [onPlayPause, onPrev, onNext, send]);
 
   const contentKey = playQueue.length;
   const containerRef = useResizeToContent(electrobun, true, contentKey);
@@ -369,18 +331,6 @@ export function MiniPlayer({
           })}
         </div>
       </div>
-
-      {contextMenu &&
-        createPortal(
-          <WinampContextMenu
-            x={contextMenu.x}
-            y={contextMenu.y}
-            isPlaying={isPlaying}
-            onAction={handleContextMenuAction}
-            onClose={() => setContextMenu(null)}
-          />,
-          document.body
-        )}
     </div>
   );
 }

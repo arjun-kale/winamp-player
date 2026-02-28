@@ -59,6 +59,8 @@ export type WinampRPC = {
       entries: { path: string; title?: string }[];
     }[]>;
     getPlaylistsDir: () => Promise<string>;
+    renamePlaylist: (p: { oldPath: string; newName: string }) => Promise<void>;
+    deletePlaylist: (p: { path: string }) => Promise<void>;
   };
 };
 
@@ -95,6 +97,8 @@ interface PlayerActions {
   loadPlaylists: () => Promise<void>;
   setActivePlaylist: (id: string | null) => void;
   createPlaylist: (name: string) => Promise<void>;
+  renamePlaylist: (playlistId: string, newName: string) => Promise<void>;
+  deletePlaylist: (playlistId: string) => Promise<void>;
   addTrackToPlaylist: (playlistId: string, track: Track) => Promise<void>;
   loadPlaylistTracks: (playlistId: string) => Track[];
   getQueueFromLibrary: () => Track[];
@@ -293,6 +297,28 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
       name,
       entries: [],
     });
+    await get().loadPlaylists();
+  },
+
+  renamePlaylist: async (playlistId, newName) => {
+    const { rpc, playlists } = get();
+    if (!rpc) return;
+
+    const pl = playlists.items.find((p) => p.id === playlistId);
+    if (!pl) return;
+
+    await rpc.request.renamePlaylist({ oldPath: pl.path, newName: newName.trim() });
+    await get().loadPlaylists();
+  },
+
+  deletePlaylist: async (playlistId) => {
+    const { rpc, playlists } = get();
+    if (!rpc) return;
+
+    const pl = playlists.items.find((p) => p.id === playlistId);
+    if (!pl) return;
+
+    await rpc.request.deletePlaylist({ path: pl.path });
     await get().loadPlaylists();
   },
 
