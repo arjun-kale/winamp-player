@@ -39,12 +39,11 @@ export default function App({ electrobun }: AppProps) {
   const { setRpc, loadLibrary, loadPlaylists, player } = usePlayerStore();
   const playTrack = usePlayerStore((s) => s.playTrack);
   const togglePlay = usePlayerStore((s) => s.togglePlay);
-  const setCurrentTime = usePlayerStore((s) => s.setCurrentTime);
   const setVolume = usePlayerStore((s) => s.setVolume);
   const handleNext = usePlayerStore((s) => s.handleNext);
   const handlePrev = usePlayerStore((s) => s.handlePrev);
 
-  const { analyserRef, analyserReady } = useAudioEngine();
+  const { analyserRef, analyserReady, seek } = useAudioEngine();
   useThemeFromArt();
 
   const rpcReady = usePlayerStore((s) => s.rpc !== null);
@@ -133,7 +132,7 @@ export default function App({ electrobun }: AppProps) {
             onPlayPause={togglePlay}
             onNext={handleNext}
             onPrev={handlePrev}
-            onScrubberChange={setCurrentTime}
+            onScrubberChange={seek}
             onVolumeChange={setVolume}
             onTrackSelect={(track, queue) => playTrack(track, queue)}
           />
@@ -152,7 +151,7 @@ export default function App({ electrobun }: AppProps) {
             onPlayPause={togglePlay}
             onNext={handleNext}
             onPrev={handlePrev}
-            onScrubberChange={setCurrentTime}
+            onScrubberChange={seek}
             onVolumeChange={setVolume}
           />
         </AudioEngineProvider>
