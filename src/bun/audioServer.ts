@@ -54,11 +54,44 @@ export async function startAudioServer(): Promise<number> {
         }
 
         const size = file.size;
+        const rangeHeader = req.headers.get("Range");
+
+        // ── Handle Range requests (required for seeking) ──────────────
+        if (rangeHeader) {
+          const match = rangeHeader.match(/bytes=(\d+)-(\d*)/);
+          if (match) {
+            const start = parseInt(match[1], 10);
+            const end = match[2] ? Math.min(parseInt(match[2], 10), size - 1) : size - 1;
+
+            if (start >= size || end < start) {
+              return new Response("Range Not Satisfiable", {
+                status: 416,
+                headers: { "Content-Range": `bytes */${size}` },
+              });
+            }
+
+            const chunkSize = end - start + 1;
+
+            return new Response(file.slice(start, end + 1), {
+              status: 206,
+              headers: {
+                "Content-Type": contentType,
+                "Content-Range": `bytes ${start}-${end}/${size}`,
+                "Content-Length": String(chunkSize),
+                "Accept-Ranges": "bytes",
+                "Access-Control-Allow-Origin": "*",
+              },
+            });
+          }
+        }
+
+        // ── Full response (no Range header) ──────────────────────────
         return new Response(file.stream(), {
           headers: {
             "Content-Type": contentType,
             "Content-Length": String(size),
             "Accept-Ranges": "bytes",
+            "Access-Control-Allow-Origin": "*",
           },
         });
       } catch {
